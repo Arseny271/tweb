@@ -4340,17 +4340,18 @@ export class AppMessagesManager extends AppManager {
   }
 
   public generateThreadServiceStartMessage(message: Message.message | Message.messageService) {
-    const threadKey = message.peerId + '_' + message.mid;
+    const {peerId, mid} = message;
+    const threadKey = peerId + '_' + mid;
     const serviceStartMid = this.threadsServiceMessagesIdsStorage[threadKey];
     if(serviceStartMid) return serviceStartMid;
 
-    const maxMessageId = getServerMessageId(Math.max(...this.getMidsByMessage(message)));
+    const maxMid = Math.max(...this.getMidsByMessage(message));
     const serviceStartMessage: Message.messageService = {
       _: 'messageService',
       pFlags: {
         is_single: true
       },
-      id: this.generateTempMessageId(message.peerId, maxMessageId),
+      id: this.generateTempMessageId(peerId, maxMid),
       date: message.date,
       from_id: {_: 'peerUser', user_id: NULL_PEER_ID}/* message.from_id */,
       peer_id: message.peer_id,
@@ -4358,8 +4359,8 @@ export class AppMessagesManager extends AppManager {
         _: 'messageActionDiscussionStarted'
       },
       reply_to: this.generateReplyHeader(
-        message.peerId,
-        this.getInputReplyTo({replyToMsgId: message.id, threadId: message.id})
+        peerId,
+        this.getInputReplyTo({replyToMsgId: mid, threadId: mid})
       )
     };
 
@@ -4376,14 +4377,15 @@ export class AppMessagesManager extends AppManager {
       peer: this.appPeersManager.getInputPeerById(peerId),
       msg_id: getServerMessageId(mid)
     }).then((result) => {
-      this.appPeersManager.saveApiPeers(result);
-      this.saveMessages(result.messages);
+      this.saveApiResult(result);
 
       const message = this.getMessageWithReplies(result.messages[0] as Message.message);
       const threadKey = message.peerId + '_' + message.mid;
       const channelId = message.peerId.toChatId();
 
       // this.generateThreadServiceStartMessage(message);
+
+      this.log('got discussion message', peerId, mid, result, message.peerId, message.mid);
 
       const historyStorage = this.getHistoryStorage(message.peerId, message.mid);
       const newMaxId = result.max_id = this.appMessagesIdsManager.generateMessageId(result.max_id, channelId) || 0;
@@ -6965,6 +6967,8 @@ export class AppMessagesManager extends AppManager {
         }
 
         historyStorage.history.insertSlice(addSlice);
+
+        this.log('inserted thread service start message', peerId, options.threadId, threadServiceMid);
       }
 
       return historyResult;
