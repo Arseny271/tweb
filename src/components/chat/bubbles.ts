@@ -1810,7 +1810,10 @@ export default class ChatBubbles {
         attachClickEvent(hoverReaction, (e) => {
           cancelEvent(e); // cancel triggering selection
 
-          this.managers.appReactionsManager.sendReaction(message as Message.message, reaction);
+          this.chat.sendReaction({
+            message: message as Message.message,
+            reaction
+          });
           this.unhoverPrevious();
         }, {listenerSetter: this.listenerSetter});
       }, noop);
@@ -2105,7 +2108,7 @@ export default class ChatBubbles {
       const reactionCount = reactionsElement.getReactionCount(reactionElement);
 
       const message = reactionsElement.getMessage();
-      this.managers.appReactionsManager.sendReaction(message, reactionCount.reaction);
+      this.chat.sendReaction({message, reaction: reactionCount.reaction});
 
       return;
     }
@@ -2398,7 +2401,8 @@ export default class ChatBubbles {
         } else {
           const withTail = bubble.classList.contains('with-media-tail');
           // selector = '.album-item video, .album-item img, .preview video, .preview img, ';
-          selector = '.album-item, .webpage-preview, ';
+          // selector = '.album-item, .webpage-preview, ';
+          selector = '.album-item, ';
           if(withTail) {
             selector += '.bubble__media-container';
           } else {
@@ -2431,6 +2435,14 @@ export default class ChatBubbles {
               peerId: this.peerId
             });
           });
+        }
+      });
+
+      // * filter duplicates (can have them in grouped documents)
+      forEachReverse(targets, (target, idx, arr) => {
+        const foundIndex = arr.findIndex((t) => t.element === target.element);
+        if(foundIndex !== idx) {
+          arr.splice(foundIndex, 1);
         }
       });
 
