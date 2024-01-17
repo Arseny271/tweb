@@ -11,7 +11,7 @@
 	path = src/solid
 	url = https://github.com/morethanwords/solid
   branch = no-errors
-[submodule "src/dash-js"]
-	path = src/dash-js
+[submodule "src/dashjs"]
+	path = src/dashjs
 	url = https://github.com/Arseny271/dash.js
 	branch = telegram-streams-contest
