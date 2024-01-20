@@ -11,6 +11,3 @@
 	path = src/solid
 	url = https://github.com/morethanwords/solid
   branch = no-errors
-[submodule "src/dashjs"]
-	path = src/dashjs
-	url = https://github.com/Arseny271/dash.js
