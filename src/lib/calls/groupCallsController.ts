@@ -7,7 +7,7 @@
 import getGroupCallAudioAsset from '../../components/groupCall/getAudioAsset';
 import {MOUNT_CLASS_TO} from '../../config/debug';
 import EventListenerBase from '../../helpers/eventListenerBase';
-import {GroupCallParticipant, GroupCallParticipantVideo, GroupCallParticipantVideoSourceGroup} from '../../layer';
+import {GroupCall, GroupCallParticipant, GroupCallParticipantVideo, GroupCallParticipantVideoSourceGroup} from '../../layer';
 import {GroupCallId, GroupCallConnectionType} from '../appManagers/appGroupCallsManager';
 import {AppManagers} from '../appManagers/managers';
 import {logger} from '../logger';
@@ -100,10 +100,10 @@ export class GroupCallsController extends EventListenerBase<{
     this.audioAsset.cancelDelayedPlay();
   }
 
-  public async joinGroupCall(chatId: ChatId, groupCallId: GroupCallId, muted = IS_MUTED, rejoin?: boolean, joinVideo?: boolean) {
+  public async joinGroupCall(chatId: ChatId, groupCall: GroupCall.groupCall, muted = IS_MUTED, rejoin?: boolean, joinVideo?: boolean) {
     this.audioAsset.createAudio();
 
-    this.log(`joinGroupCall chatId=${chatId} id=${groupCallId} muted=${muted} rejoin=${rejoin}`);
+    this.log(`joinGroupCall chatId=${chatId} id=${groupCall.id} muted=${muted} rejoin=${rejoin}`);
 
     let streamManager: StreamManager;
     if(rejoin) {
@@ -112,7 +112,7 @@ export class GroupCallsController extends EventListenerBase<{
       streamManager = await createMainStreamManager(muted, joinVideo);
     }
 
-    return this.joinGroupCallInternal(chatId, groupCallId, streamManager, muted, rejoin, joinVideo)
+    return this.joinGroupCallInternal(chatId, groupCall, streamManager, muted, rejoin, joinVideo)
     .then(() => {
       // have to refresh participants because of the new connection
       const {currentGroupCall} = this;
@@ -130,9 +130,9 @@ export class GroupCallsController extends EventListenerBase<{
     });
   }
 
-  private async joinGroupCallInternal(chatId: ChatId, groupCallId: GroupCallId, streamManager: StreamManager, muted: boolean, rejoin = false, joinVideo?: boolean) {
+  private async joinGroupCallInternal(chatId: ChatId, groupCall: GroupCall.groupCall, streamManager: StreamManager, muted: boolean, rejoin = false, joinVideo?: boolean) {
     const log = this.log.bindPrefix('joinGroupCallInternal');
-    log('start', groupCallId);
+    log('start', groupCall.id);
 
     const type: GroupCallConnectionType = 'main';
 
@@ -141,11 +141,11 @@ export class GroupCallsController extends EventListenerBase<{
       // currentGroupCall.connections.main.connection = connection;
       currentGroupCall.handleUpdateGroupCallParticipants = false;
       currentGroupCall.updatingSdp = false;
-      log('update currentGroupCall', groupCallId, currentGroupCall);
+      log('update currentGroupCall', groupCall.id, currentGroupCall);
     } else {
       currentGroupCall = new GroupCallInstance({
         chatId,
-        id: groupCallId,
+        id: groupCall.id,
         managers: this.managers
       });
 
@@ -160,7 +160,7 @@ export class GroupCallsController extends EventListenerBase<{
         }
       });
 
-      currentGroupCall.groupCall = await this.managers.appGroupCallsManager.getGroupCallFull(groupCallId);
+      currentGroupCall.groupCall = groupCall;
 
       const connectionInstance = currentGroupCall.createConnectionInstance({
         streamManager,
@@ -211,7 +211,7 @@ export class GroupCallsController extends EventListenerBase<{
             if(!currentGroupCall.joined) {
               currentGroupCall.joined = true;
               this.audioAsset.playSound('group_call_start.mp3');
-              this.managers.appGroupCallsManager.getGroupCallParticipants(groupCallId);
+              this.managers.appGroupCallsManager.getGroupCallParticipants(groupCall.id);
             }
 
             break;
@@ -240,7 +240,7 @@ export class GroupCallsController extends EventListenerBase<{
       connectionInstance.appendStreamToConference();
 
       this.setCurrentGroupCall(currentGroupCall);
-      log('set currentGroupCall', groupCallId, currentGroupCall);
+      log('set currentGroupCall', groupCall.id, currentGroupCall);
 
       this.startConnectingSound();
 

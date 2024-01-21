@@ -122,6 +122,6 @@ export default class PopupForward extends PopupPickUser {
       }
     });
 
-    PopupElement.createPopup(PopupForward, args[0], args[1], Array.from(actions));
+    PopupElement.createPopup(PopupForward, args[0], args[1], args[2] ? args[2] : Array.from(actions));
   }
 }

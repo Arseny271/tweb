@@ -17,6 +17,7 @@ module.exports = {
     'src/vendor/**',
     'src/solid/**',
     'src/opus-recorder/**',
+    'src/lib/streams/dashjs/**',
     'public/**'
   ],
   overrides: [{

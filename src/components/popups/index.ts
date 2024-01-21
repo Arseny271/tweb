@@ -24,6 +24,8 @@ import {getMiddleware, MiddlewareHelper} from '../../helpers/middleware';
 import ButtonIcon from '../buttonIcon';
 import Icon from '../icon';
 import toggleDisability from '../../helpers/dom/toggleDisability';
+import {ButtonMenuItemOptionsVerifiable} from '../buttonMenu';
+import ButtonMenuToggle from '../buttonMenuToggle';
 
 export type PopupButton = {
   text?: HTMLElement | DocumentFragment,
@@ -51,7 +53,8 @@ export type PopupOptions = Partial<{
   scrollable: boolean,
   buttons: Array<PopupButton>,
   title: boolean | LangPackKey | DocumentFragment | HTMLElement,
-  floatingHeader: boolean
+  floatingHeader: boolean,
+  options?: ButtonMenuItemOptionsVerifiable[]
 }>;
 
 export interface PopupElementConstructable<T extends PopupElement = any> {
@@ -85,6 +88,7 @@ export default class PopupElement<T extends EventListenerListeners = {}> extends
   protected btnClose: HTMLElement;
   protected btnCloseAnimatedIcon: HTMLElement;
   protected btnConfirm: HTMLButtonElement;
+  protected btnMore: HTMLElement;
   protected body: HTMLElement;
   protected buttonsEl: HTMLElement;
 
@@ -188,6 +192,14 @@ export default class PopupElement<T extends EventListenerListeners = {}> extends
       }
       this.header.append(this.btnConfirm);
       // ripple(this.btnConfirm);
+    }
+
+    if(options.options && options.options.length) {
+      this.header.append(ButtonMenuToggle({
+        listenerSetter: this.listenerSetter,
+        direction: 'bottom-left',
+        buttons: options.options
+      }))
     }
 
     this.container.append(this.header);

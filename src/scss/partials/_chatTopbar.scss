@@ -30,7 +30,7 @@
 
 body.is-calling {
   .topbar {
-    &, 
+    &,
     &-call-container {
       transform: translateY(0);
     }
@@ -47,7 +47,7 @@ body.is-calling {
 
   &:not(.backwards) {
     .topbar {
-      &, 
+      &,
       &-call-container {
         transform: translateY(var(--topbar-call-height));
       }
@@ -67,15 +67,17 @@ body.is-right-column-shown {
 
 .topbar {
   --topbar-height: 3.5rem;
-  
+
   --pinned-floating-audio-height: 0px;
+  --pinned-floating-call-height: 0px;
   --pinned-floating-message-height: 0px;
   --pinned-floating-requests-height: 0px;
   --pinned-floating-actions-height: 0px;
-	--pinned-floating-height: calc(var(--pinned-floating-audio-height) + var(--pinned-floating-message-height) + var(--pinned-floating-requests-height) + var(--pinned-floating-actions-height) + var(--topbar-floating-call-height));
-  
+	--pinned-floating-height: calc(var(--pinned-floating-call-height) + var(--pinned-floating-audio-height) + var(--pinned-floating-message-height) + var(--pinned-floating-requests-height) + var(--pinned-floating-actions-height) + var(--topbar-floating-call-height));
+
   --pinned-container-height: 3.25rem;
 	--pinned-audio-height: var(--pinned-container-height);
+	--pinned-call-height: var(--pinned-container-height);
 	--pinned-message-height: var(--pinned-container-height);
 
 	width: 100%;
@@ -101,9 +103,50 @@ body.is-right-column-shown {
 		--pinned-floating-audio-height: var(--pinned-audio-height);
 	}
 
+    &.is-pinned-group-call-floating {
+      --pinned-floating-call-height: var(--pinned-call-height);
+    }
+
 	&.is-pinned-message-floating {
 		--pinned-floating-message-height: var(--pinned-message-height);
 	}
+
+  .pinned-group-call {
+    .quote-like {
+      background: linear-gradient(90deg, #4588E331 0.79%, #976FFF31 54.33%, #E46ACE31 97.09%);
+      display: flex;
+      padding-right: 8px;
+    }
+    .reply-title {
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 18px;
+    }
+    .reply-subtitle {
+      color: var(--primary-color);
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 18px;
+    }
+  }
+
+  .pinned-group-call-content {
+    margin-inline-end: 0 !important;
+  }
+
+  .group-call-join-button {
+    background: #E46ACE;
+    min-height: 26px;
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 15px;
+    padding: 0 12px;
+    border-radius: 13px;
+    pointer-events: all;
+    overflow: hidden;
+  }
 
   &.is-pinned-requests-floating {
     --pinned-floating-requests-height: var(--pinned-container-height);
@@ -133,6 +176,35 @@ body.is-right-column-shown {
 			} */
 		}
 	}
+
+    &.is-pinned-group-call-floating.is-pinned-message-floating {
+      .pinned-message {
+        top: calc(var(--topbar-height) + var(--pinned-call-height));
+
+        &:before {
+          border-top: none;
+        }
+      }
+    }
+
+    &.is-pinned-group-call-floating.is-pinned-audio-floating.is-pinned-message-floating {
+      .pinned-message {
+        top: calc(var(--topbar-height) + var(--pinned-call-height) + var(--pinned-audio-height));
+
+        &:before {
+          border-top: none;
+        }
+      }
+    }
+
+    &.is-pinned-group-call-floating.is-pinned-audio-floating {
+      .pinned-audio {
+        top: calc(var(--topbar-height) + var(--pinned-call-height));
+        &:before {
+          border-top: none;
+        }
+      }
+    }
 
 	@include respond-to(not-handhelds) {
 		.menu-search {
@@ -198,7 +270,7 @@ body.is-right-column-shown {
 		}
 	}
 
-	.peer-title, 
+	.peer-title,
 	.info {
 		@include text-overflow();
 		line-height: var(--line-height);
@@ -219,7 +291,7 @@ body.is-right-column-shown {
 			margin-inline-start: 0;
 		}
 	}
-	
+
 	.chat-info {
 		flex: 1 1 auto;
 		overflow: hidden;
@@ -231,7 +303,7 @@ body.is-right-column-shown {
 		@include respond-to(handhelds) {
 			padding-inline-start: 52px;
     }
-		
+
 		//&.have-utils-width {
 			max-width: calc(100% - var(--utils-width));
 
@@ -284,14 +356,14 @@ body.is-right-column-shown {
 			display: none;
 		}
 	}
-	
+
 	.content {
 		flex: 1 1 auto;
 		padding-inline-start: 1.125rem;
 		max-width: 100%;
 		overflow: hidden;
 	}
-	
+
 	.person {
 		display: flex;
 		align-items: center;
@@ -305,7 +377,7 @@ body.is-right-column-shown {
 			font-size: .875rem;
 			//line-height: 18px;
 			color: var(--secondary-text-color);
-			
+
 			.online {
 				color: var(--primary-color);
 			}
@@ -378,7 +450,7 @@ body.is-right-column-shown {
           .topbar-call-right {
             width: auto;
           }
-  
+
           .group-call-description {
             display: none;
           }
@@ -399,7 +471,7 @@ body.is-right-column-shown {
       }
     }
 
-    &-left, 
+    &-left,
     &-right {
       flex: 0 0 auto;
       width: 12rem;

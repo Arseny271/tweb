@@ -50,6 +50,8 @@ export default class PinnedContainer {
     divAndCaption: PinnedContainer['divAndCaption'],
     onClose?: PinnedContainer['onClose'],
     floating?: PinnedContainer['floating']
+    hideButtons?: boolean;
+    noRipple?: boolean
   }) {
     safeAssign(this, options);
 
@@ -65,13 +67,17 @@ export default class PinnedContainer {
 
     this.wrapper = document.createElement('div');
     this.wrapper.classList.add(CLASSNAME_BASE + '-wrapper', `pinned-${className}-wrapper`);
-    ripple(this.wrapper);
+    if(!options.noRipple) {
+      ripple(this.wrapper);
+    }
 
-    this.wrapperUtils = document.createElement('div');
-    this.wrapperUtils.classList.add(CLASSNAME_BASE + '-wrapper-utils', `pinned-${className}-wrapper-utils`);
-    this.wrapperUtils.append(this.btnClose);
-
-    this.wrapper.append(...(divAndCaption ? Array.from(divAndCaption.container.children) : []), this.wrapperUtils);
+    this.wrapper.append(...(divAndCaption ? Array.from(divAndCaption.container.children) : []));
+    if(!options.hideButtons) {
+      this.wrapperUtils = document.createElement('div');
+      this.wrapperUtils.classList.add(CLASSNAME_BASE + '-wrapper-utils', `pinned-${className}-wrapper-utils`);
+      this.wrapperUtils.append(this.btnClose);
+      this.wrapper.append(this.wrapperUtils);
+    }
 
     divAndCaption && divAndCaption.container.append(this.wrapper/* , this.close */);
 
@@ -131,8 +137,10 @@ export default class PinnedContainer {
 
   public fill(options: WrapPinnedContainerOptions) {
     const {message} = options;
-    this.divAndCaption.container.dataset.peerId = '' + message.peerId;
-    this.divAndCaption.container.dataset.mid = '' + message.mid;
+    if(message) {
+      this.divAndCaption.container.dataset.peerId = '' + message.peerId;
+      this.divAndCaption.container.dataset.mid = '' + message.mid;
+    }
     this.divAndCaption.fill(options);
     this.topbar.setUtilsWidth();
   }

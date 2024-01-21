@@ -9,6 +9,7 @@ import {GroupCall} from '../../layer';
 import GroupCallInstance from '../../lib/calls/groupCallInstance';
 import wrapEmojiText from '../../lib/richTextProcessor/wrapEmojiText';
 import PeerTitle from '../peerTitle';
+import LiveStreamInstance from '../../lib/streams/liveStreamInstance';
 
 export default class GroupCallTitleElement {
   private peerTitle: PeerTitle;
@@ -17,7 +18,7 @@ export default class GroupCallTitleElement {
     this.peerTitle = new PeerTitle({peerId: 0});
   }
 
-  public update(instance: GroupCallInstance) {
+  public update(instance: GroupCallInstance | LiveStreamInstance) {
     const {peerTitle, appendTo} = this;
     const groupCall = instance.groupCall as GroupCall.groupCall;
     const peerId = instance.chatId.toPeerId(true);

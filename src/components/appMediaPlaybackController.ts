@@ -903,7 +903,7 @@ export class AppMediaPlaybackController extends EventListenerBase<{
       this.playingMedia.loop = this.loop;
     }
 
-    if('mediaSession' in navigator) {
+    if(('mediaSession' in navigator) && message) {
       this.setNewMediadata(message);
     }
   }

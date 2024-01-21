@@ -55,7 +55,7 @@
     --transform-origin-left-center: right center;
     --transform-origin-right-center: left center;
   }
-  
+
   --pm-transition: .2s ease-in-out;
   --layer-transition: .2s cubic-bezier(.4, .0, .2, 1);
   --slide-header-transition: .4s ease-in-out;
@@ -442,7 +442,7 @@
 @import "partials/popups/stickers";
 @import "partials/popups/datePicker";
 @import "partials/popups/createPoll";
-@import "partials/popups/forward"; 
+@import "partials/popups/forward";
 @import "partials/popups/instanceDeactivated";
 @import "partials/popups/joinChatInvite";
 @import "partials/popups/reportMessages";
@@ -464,6 +464,7 @@
 @import "partials/popups/premium";
 @import "partials/popups/boost";
 @import "partials/popups/giftLink";
+@import "partials/popups/streamingStartRtmp";
 
 @import "partials/pages/pages";
 @import "partials/pages/authCode";
@@ -477,7 +478,7 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden; // + disable overscroll behavior on macOS
-  
+
   @include respond-to(handhelds) {
     height: calc(var(--vh, 1vh) * 100);
   }
@@ -661,7 +662,7 @@ textarea {
 }
 
 // Possible fix Safari's password autocomplete
-input::-webkit-contacts-auto-fill-button, 
+input::-webkit-contacts-auto-fill-button,
 input::-webkit-credentials-auto-fill-button {
   visibility: hidden;
   position: absolute;
@@ -738,12 +739,12 @@ input:-webkit-autofill:active {
 .preloader {
   width: 50px;
   height: 50px;
-  
+
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  
+
   // ! do not change it to &-path
   .preloader-path {
     stroke: var(--primary-color);
@@ -958,11 +959,11 @@ b {
     transform: scale(1);
     opacity: 1;
   }
-  
+
   ul {
     margin: .5rem 0;
   }
-  
+
   li {
     /* display: flex; */
     align-items: center;
@@ -971,14 +972,14 @@ b {
     height: 3.5rem;
     cursor: pointer;
     /* font-weight: 500; */
-    
+
     text-align: start;
     display: grid;
     grid-template-columns: calc(26px + 2rem) 1fr 80px;
-    
+
     @include hover-background-effect();
   }
-  
+
   // +2 px bc of whitespace
   .emoji {
     height: 26px;
@@ -1003,7 +1004,7 @@ b {
   height: 166px;
   margin: 0 auto 18px;
   position: relative;
-  
+
   @include respond-to(handhelds) {
     width: 120px;
     height: 120px;
@@ -1024,7 +1025,7 @@ b {
   cursor: pointer;
   font-size: 1.5rem;
   line-height: 1;
-  
+
   @include hover() {
     opacity: 1;
   }
@@ -1034,7 +1035,7 @@ b {
   display: inline !important;
   //line-height: 1em;
   //font-size: 1em;
-  
+
   font-family: apple color emoji,segoe ui emoji,noto color emoji,android emoji,emojisymbols,emojione mozilla,twemoji mozilla,segoe ui symbol;
   vertical-align: unset !important;
   line-height: 1 !important;
@@ -1111,11 +1112,11 @@ not screen and (                min-resolution: 2dppx) {
   @include hover-background-effect() {
     border-radius: $border-radius-medium;
   }
-  
+
   /* &:nth-child(5n+5) {
     margin-inline-end: 0;
   } */
-  
+
   /* > img, > .rlottie {
     position: absolute;
     left: 0;
@@ -1126,7 +1127,7 @@ not screen and (                min-resolution: 2dppx) {
 
   > img {
     object-fit: contain;
-    
+
     @include animation-level(2) {
       animation: fade-in-opacity .2s ease forwards;
     }
@@ -1235,7 +1236,7 @@ not screen and (                min-resolution: 2dppx) {
     position: relative;
     cursor: pointer;
     user-select: none;
-    
+
     &-media {
       position: absolute;
       left: 0;
@@ -1279,7 +1280,7 @@ not screen and (                min-resolution: 2dppx) {
         //transform: translateY(var(--translateY));
         //transform: translateY(100%);
       }
-      
+
       /* &.backwards {
         opacity: 1;
         transform: translateY(0) !important;
@@ -1313,7 +1314,7 @@ not screen and (                min-resolution: 2dppx) {
             &.from-top {
               transform: translateY(100%);
             }
-      
+
             &.from-bottom {
               transform: translateY(-100%);
             }
@@ -1335,7 +1336,7 @@ not screen and (                min-resolution: 2dppx) {
 // *:not(input):not(textarea) {
 //   -webkit-user-select: none; /* disable selection/Copy of UIWebView */
 //   -webkit-touch-callout: none; /* disable the IOS popup when long-press on a link */
-// }   
+// }
 
 middle-ellipsis-element {
   width: 100%;
@@ -1434,10 +1435,10 @@ middle-ellipsis-element {
   }
 }
 
-.media-photo, 
-.media-video, 
-.media-sticker, 
-.media-round, 
+.media-photo,
+.media-video,
+.media-sticker,
+.media-round,
 .media-poster {
   // & ~ & {
     position: absolute;
@@ -1627,7 +1628,7 @@ hr {
   font-size: var(--esg-emoji-size);
   line-height: var(--esg-emoji-size);
   column-gap: .25rem;
-  
+
   .custom-emoji {
     display: block;
 
@@ -1757,7 +1758,7 @@ hr {
   &-check {
     fill: #fff;
   }
-  
+
   &-background {
     fill: var(--primary-color);
   }
@@ -1864,7 +1865,7 @@ hr {
       position: absolute;
       background: linear-gradient(73.4deg, #6C93FF -7.21%, #976FFF 114.57%, #DF69D1 241.52%);
       background-size: 200px 2rem;
-  
+
       &:after {
         display: block;
         content: " ";

@@ -2181,6 +2181,7 @@ const lang = {
   // "PeerInfo.Confirm.RemovePeer": "Remove %@ from the group?",
   'PeerInfo.Action.VoiceChat': 'Video Chat',
   'PeerInfo.Action.LiveStream': 'Live Stream',
+  'PeerInfo.Action.LiveStreamWith': 'Live Stream With...',
   'PeerInfo.Phone.AnonymousInfo': 'This number is not tied to a SIM card and was acquired on [Fragment]().',
   'PeerInfo.SetAboutDescription': 'You can provide an optional description for your group.',
   'PeerMedia.Members': 'Members',
@@ -2368,7 +2369,43 @@ const lang = {
   'Premium.Offset.AlreadyHave': 'You already have Telegram Premium.',
   'GiftLink.UseSuccess': 'You successfully activated gift link.',
   'Giveaway.Type.Specific.Modal.SelectUsers': 'Select Users',
-  'GroupStats.Title': 'Group Statistics'
+
+  'GroupStats.Title': 'Group Statistics',
+  'StreamingRTMP.Recording': 'Recording',
+  'StreamingRTMP.Start': 'Start Streaming',
+  'StreamingRTMP.Join': 'Join',
+  'StreamingRTMP.Action.Revoke': 'Revoke',
+  'StreamingRTMP.Server.Url': 'Server URL',
+  'StreamingRTMP.Server.Key': 'Stream Key',
+  'StreamingRTMP.Caption.Url': 'To stream video with another app, enter these Server URL and Stream Key in your streaming app. Software encoding recommended (×264 in OBS).',
+  'StreamingRTMP.Caption.Broadcast': 'Once you start broadcasting in your streaming app, click Start Streaming below.',
+  'StreamingRTMP.More.OutputDevice': 'Output Device',
+  'StreamingRTMP.More.StartRecording': 'Start Recording',
+  'StreamingRTMP.More.StopRecording': 'Stop Recording',
+  'StreamingRTMP.Caption.Record': 'Record this stream and save the result into an file?\n\nParticipants will see that the chat is being recorded.',
+  'StreamingRTMP.Caption.Record.Audio': 'This chat will be recorded into an audio file.',
+  'StreamingRTMP.Caption.Record.Video': 'Choose video orientation.',
+  'StreamingRTMP.AlsoRecordVideo': 'Also Record Video.',
+  'StreamingRTMP.RecordingTitle': 'Recording Title.',
+  'StreamingRTMP.More.StreamSettings': 'Stream Settings',
+  'StreamingRTMP.More.EndLiveStream': 'End Live Stream',
+
+  'LiveStream.Toast.Revoked': 'Stream Key Revoked',
+  'LiveStream.RevokeStreamKey': 'Revoke Stream Key',
+
+  'LiveStream.TopBar.LiveStream': 'Live Stream',
+  'LiveStream.TopBar.GroupCall': 'Group Call',
+  'LiveStream.TopBar.GroupCall.Members': '%@ participants',
+
+
+  'LiveStream.Oops.Title': 'Oops!',
+  'LiveStream.Watching': '%@ watching',
+  'LiveStream.ConnectionFailed': 'Connection Failed',
+  'LiveStream.Oops.Caption': 'Telegram doesn\'t see any stream coming from your streaming app. Please make sure you entered the right Server URL and Stream Key in your app.',
+  'LiveStream.End.Title': 'Leave live stream',
+  'LiveStream.End.Text': 'Are you sure you want to leave this live stream?',
+  'LiveStream.End.Third': 'End Live Stream',
+  'LiveStream.End.OK': 'Leave'
 };
 
 export default lang;

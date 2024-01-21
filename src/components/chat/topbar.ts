@@ -28,7 +28,7 @@ import cancelEvent from '../../helpers/dom/cancelEvent';
 import {attachClickEvent} from '../../helpers/dom/clickEvent';
 import {toast, toastNew} from '../toast';
 import replaceContent from '../../helpers/dom/replaceContent';
-import {ChatFull, Chat as MTChat, GroupCall, Dialog} from '../../layer';
+import {ChatFull, Chat as MTChat, GroupCall, Dialog, InputFileLocation} from '../../layer';
 import PopupPickUser from '../popups/pickUser';
 import PopupPeer, {PopupPeerCheckboxOptions} from '../popups/peer';
 import AppEditContactTab from '../sidebarRight/tabs/editContact';
@@ -55,10 +55,13 @@ import {avatarNew, findUpAvatar} from '../avatarNew';
 import {Middleware, MiddlewareHelper, getMiddleware} from '../../helpers/middleware';
 import setBadgeContent from '../../helpers/setBadgeContent';
 import createBadge from '../../helpers/createBadge';
-import PopupBoostsViaGifts from '../popups/boostsViaGifts';
 import AppStatisticsTab from '../sidebarRight/tabs/statistics';
 import {ChatType} from './chat';
+import PopupStartLiveStreamRTMP from '../popups/livestreamStartRtmp';
 import AppBoostsTab from '../sidebarRight/tabs/boosts';
+import ChatGroupCall from './chatGroupCall';
+import liveStreamsController from '../../lib/streams/liveStreamsController';
+import IS_LIVE_STREAM_SUPPORTED from '../../environment/liveStreamSupport';
 
 type ButtonToVerify = {element?: HTMLElement, verify: () => boolean | Promise<boolean>};
 
@@ -81,10 +84,12 @@ export default class ChatTopbar {
   private btnMute: HTMLButtonElement;
   private btnSearch: HTMLButtonElement;
   private btnMore: HTMLElement;
+  private btnLiveStreamChannel: HTMLElement;
 
   private chatActions: ChatActions;
   private chatRequests: ChatRequests;
   private chatAudio: ChatAudio;
+  private chatGroupCall: ChatGroupCall;
   public pinnedMessage: ChatPinnedMessage;
 
   private setUtilsRAF: number;
@@ -162,6 +167,7 @@ export default class ChatTopbar {
     this.chatAudio = new ChatAudio(this, this.chat, this.managers);
     this.chatRequests = new ChatRequests(this, this.chat, this.managers);
     this.chatActions = new ChatActions(this, this.chat, this.managers);
+    this.chatGroupCall = new ChatGroupCall(this, this.chat, this.managers);
 
     if(this.menuButtons.length) {
       this.btnMore = ButtonMenuToggle({
@@ -178,6 +184,22 @@ export default class ChatTopbar {
       });
     }
 
+    this.btnLiveStreamChannel = ButtonMenuToggle({
+      listenerSetter: this.listenerSetter,
+      direction: 'bottom-left',
+      customIcon: 'videochat',
+      buttons: [{
+        icon: 'videochat',
+        text: 'PeerInfo.Action.LiveStream',
+        onClick: this.onJoinGroupCallClick
+      }, {
+        icon: 'videochat',
+        text: 'PeerInfo.Action.LiveStreamWith',
+        onClick: this.onStartLiveStreamingWith,
+        verify: this.verifyVideoChatButton.bind(this, 'broadcast', true)
+      }]
+    });
+
     this.chatUtils.append(...[
       // this.chatAudio ? this.chatAudio.divAndCaption.container : null,
       // this.pinnedMessage ? this.pinnedMessage.pinnedMessageContainer.divAndCaption.container : null,
@@ -185,13 +207,15 @@ export default class ChatTopbar {
       this.btnPinned,
       this.btnCall,
       this.btnGroupCall,
+      this.btnLiveStreamChannel,
       this.btnMute,
       this.btnSearch,
       this.btnMore
     ].filter(Boolean));
 
     this.pushButtonToVerify(this.btnCall, this.verifyCallButton.bind(this, 'voice'));
-    this.pushButtonToVerify(this.btnGroupCall, this.verifyVideoChatButton);
+    this.pushButtonToVerify(this.btnGroupCall, this.verifyVideoChatButton.bind(this, 'group'));
+    this.pushButtonToVerify(this.btnLiveStreamChannel, this.verifyVideoChatButton.bind(this, 'broadcast'));
 
     this.chatInfoContainer.append(this.btnBack, this.chatInfo, this.chatUtils);
     this.container.append(this.chatInfoContainer);
@@ -203,6 +227,10 @@ export default class ChatTopbar {
     if(this.chatAudio) {
       // this.container.append(this.chatAudio.divAndCaption.container, this.chatUtils);
       this.container.append(this.chatAudio.divAndCaption.container);
+    }
+
+    if(this.chatGroupCall) {
+      this.container.append(this.chatGroupCall.divAndCaption.container);
     }
 
     if(this.chatRequests) {
@@ -317,12 +345,38 @@ export default class ChatTopbar {
     r();
   };
 
-  private verifyVideoChatButton = async(type?: 'group' | 'broadcast') => {
-    if(!IS_GROUP_CALL_SUPPORTED || this.peerId.isUser() || this.chat.type !== ChatType.Chat || this.chat.threadId) return false;
+  private verifyGroupCallPinned = () => {
+    if(!this.chatGroupCall) return;
+
+    if(this.peerId.isUser() || this.chat.type !== ChatType.Chat || this.chat.threadId) {
+      this.chatGroupCall.toggle(true);
+      return;
+    }
 
     const currentGroupCall = groupCallsController.groupCall;
+    const currentLiveStream = liveStreamsController.groupCall;
     const chatId = this.peerId.toChatId();
-    if(currentGroupCall?.chatId === chatId) {
+    if(currentGroupCall?.chatId === chatId || currentLiveStream?.chatId === chatId) {
+      this.chatGroupCall.toggle(true);
+      return ;
+    }
+
+    const chat = apiManagerProxy.getChat(chatId) as MTChat.chat | MTChat.channel;
+    if(chat.pFlags.call_active && chat.pFlags.call_not_empty) {
+      this.chatGroupCall.toggle(false); // setGroupCall(chatId);
+    } else {
+      this.chatGroupCall.toggle(true);
+    }
+  }
+
+  private verifyVideoChatButton = async(type?: 'group' | 'broadcast', isRtmp?: boolean) => {
+    const supported = isRtmp ? IS_LIVE_STREAM_SUPPORTED: IS_GROUP_CALL_SUPPORTED;
+    if(!supported || this.peerId.isUser() || this.chat.type !== ChatType.Chat || this.chat.threadId) return false;
+
+    const currentGroupCall = groupCallsController.groupCall;
+    const currentLiveStream = liveStreamsController.groupCall;
+    const chatId = this.peerId.toChatId();
+    if(currentGroupCall?.chatId === chatId || currentLiveStream?.chatId === chatId) {
       return false;
     }
 
@@ -334,7 +388,15 @@ export default class ChatTopbar {
     }
 
     const chat = apiManagerProxy.getChat(chatId);
-    return (chat as MTChat.chat).pFlags?.call_active || hasRights(chat, 'manage_call');
+    if((chat._ === 'channel' || chat._ === 'chat') && chat.pFlags.call_not_empty && chat.pFlags.call_active) {
+      return false;
+    }
+
+    if(isRtmp && !(chat._ === 'channel' && chat.pFlags.creator)) {
+      return false;
+    }
+
+    return hasRights(chat, 'manage_call');
   };
 
   private verifyCallButton = async(type?: CallType) => {
@@ -400,6 +462,11 @@ export default class ChatTopbar {
       text: 'PeerInfo.Action.LiveStream',
       onClick: this.onJoinGroupCallClick,
       verify: this.verifyVideoChatButton.bind(this, 'broadcast')
+    }, {
+      icon: 'videochat',
+      text: 'PeerInfo.Action.LiveStreamWith',
+      verify: this.verifyVideoChatButton.bind(this, 'broadcast', true),
+      onClick: this.onStartLiveStreamingWith
     }, {
       icon: 'videochat',
       text: 'PeerInfo.Action.VoiceChat',
@@ -629,6 +696,10 @@ export default class ChatTopbar {
     this.chat.appImManager.joinGroupCall(this.peerId);
   };
 
+  private onStartLiveStreamingWith = () => {
+    PopupElement.createPopup(PopupStartLiveStreamRTMP, this.peerId);
+  };
+
   private get peerId() {
     return this.chat.peerId;
   }
@@ -700,6 +771,7 @@ export default class ChatTopbar {
         this.btnJoin.classList.toggle('hide', !(chat as Channel)?.pFlags?.left);
         this.setUtilsWidth();
         this.verifyButtons();
+        this.verifyGroupCallPinned();
       }
     });
 
@@ -712,6 +784,7 @@ export default class ChatTopbar {
     this.listenerSetter.add(rootScope)('peer_full_update', (peerId) => {
       if(this.peerId === peerId) {
         this.verifyButtons();
+        this.verifyGroupCallPinned();
       }
     });
 
@@ -811,11 +884,13 @@ export default class ChatTopbar {
     this.avatarMiddlewareHelper?.destroy();
     this.pinnedMessage?.destroy(); // * возможно это можно не делать
     this.chatAudio?.destroy();
+    this.chatGroupCall?.destroy();
     this.chatRequests?.destroy();
     this.chatActions?.destroy();
 
     delete this.pinnedMessage;
     delete this.chatAudio;
+    delete this.chatGroupCall;
     delete this.chatRequests;
     delete this.chatActions;
   }
@@ -936,6 +1011,7 @@ export default class ChatTopbar {
       this.setUtilsWidth();
 
       this.verifyButtons();
+      this.verifyGroupCallPinned();
 
       if(this.btnMore) {
         this.btnMore.classList.toggle('hide', !canHaveSomeButtons);
@@ -1112,6 +1188,7 @@ export default class ChatTopbar {
       this.chatAudio,
       this.chatRequests,
       this.chatActions,
+      this.chatGroupCall,
       this.pinnedMessage?.pinnedMessageContainer
     ].filter(Boolean);
     const count = containers.reduce((acc, container) => {

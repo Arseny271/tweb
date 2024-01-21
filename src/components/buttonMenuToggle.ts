@@ -61,6 +61,7 @@ export default function ButtonMenuToggle({
   onOpen,
   onClose,
   onCloseAfter,
+  customIcon,
   noIcon
 }: {
   buttonOptions?: Parameters<typeof ButtonIcon>[1],
@@ -72,13 +73,14 @@ export default function ButtonMenuToggle({
   onOpen?: (e: Event, element: HTMLElement) => any,
   onClose?: () => void,
   onCloseAfter?: () => void,
+  customIcon?: string;
   noIcon?: boolean
 }) {
   if(buttonOptions) {
     buttonOptions.asDiv = true;
   }
 
-  const button = container ?? ButtonIcon(noIcon ? undefined : 'more', buttonOptions);
+  const button = container ?? ButtonIcon(noIcon ? undefined : (customIcon ? customIcon : 'more'), buttonOptions);
   button.classList.add('btn-menu-toggle');
 
   const listenerSetter = new ListenerSetter();

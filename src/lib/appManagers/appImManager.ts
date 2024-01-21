@@ -26,7 +26,24 @@ import {MOUNT_CLASS_TO} from '../../config/debug';
 import appNavigationController from '../../components/appNavigationController';
 import AppPrivateSearchTab from '../../components/sidebarRight/tabs/search';
 import I18n, {i18n, join, LangPackKey} from '../langPack';
-import {ChatFull, ChatParticipants, Message, MessageAction, MessageMedia, SendMessageAction, User, Chat as MTChat, UrlAuthResult, WallPaper, Config, AttachMenuBot, Peer, InputChannel, HelpPeerColors} from '../../layer';
+import {
+  ChatFull,
+  ChatParticipants,
+  Message,
+  MessageAction,
+  MessageMedia,
+  SendMessageAction,
+  User,
+  Chat as MTChat,
+  UrlAuthResult,
+  WallPaper,
+  Config,
+  AttachMenuBot,
+  Peer,
+  InputChannel,
+  HelpPeerColors,
+  GroupCall
+} from '../../layer';
 import PeerTitle from '../../components/peerTitle';
 import {PopupPeerCheckboxOptions} from '../../components/popups/peer';
 import blurActiveElement from '../../helpers/dom/blurActiveElement';
@@ -116,6 +133,7 @@ import safePlay from '../../helpers/dom/safePlay';
 import {RequestWebViewOptions} from './appAttachMenuBotsManager';
 import PopupWebApp from '../../components/popups/webApp';
 import {getPeerColorIndexByPeer, getPeerColorsByPeer, setPeerColors} from './utils/peers/getPeerColorById';
+import liveStreamsController from '../streams/liveStreamsController';
 
 export type ChatSavedPosition = {
   mids: number[],
@@ -1415,25 +1433,56 @@ export class AppImManager extends EventListenerBase<{
     }
   }
 
-  public async joinGroupCall(peerId: PeerId, groupCallId?: GroupCallId) {
+  public getGroupCall() {
+    if(groupCallsController.groupCall && groupCallsController.groupCall.groupCall) {
+      return groupCallsController.groupCall.groupCall;
+    }
+    if(liveStreamsController.groupCall && liveStreamsController.groupCall.groupCall) {
+      return liveStreamsController.groupCall.groupCall;
+    }
+  }
+
+  public async joinGroupCall(peerId: PeerId, groupCallTargetId?: GroupCallId, isRtmpStream?: boolean) {
     const chatId = peerId.toChatId();
     const hasRights = this.managers.appChatsManager.hasRights(chatId, 'manage_call');
-    const next = async() => {
-      const chatFull = await this.managers.appProfileManager.getChatFull(chatId);
-      let call: MyGroupCall;
-      if(!chatFull.call) {
-        if(!hasRights) {
-          return;
-        }
 
-        call = await this.managers.appGroupCallsManager.createGroupCall(chatId);
-      } else {
-        call = chatFull.call;
+    const getGroupCallId = async() => {
+      if(groupCallTargetId) {
+        return groupCallTargetId;
       }
+      const chatFull = await this.managers.appProfileManager.getChatFull(chatId);
+      if(chatFull.call) {
+        return chatFull.call.id;
+      }
+    }
 
-      groupCallsController.joinGroupCall(chatId, call.id, true, false);
+    const getOrCreateGroupCall = async(groupCallTarget?: GroupCall.groupCall) => {
+      if(groupCallTarget) {
+        return groupCallTarget;
+      } else if(hasRights) {
+        const call = await this.managers.appGroupCallsManager.createGroupCall(chatId, undefined, undefined, isRtmpStream);
+        if(call._ !== 'groupCall') {
+          throw new Error('Api bug?');
+        }
+        return call;
+      }
+    }
+
+    const next = async(groupCallTarget?: GroupCall.groupCall): Promise<void> => {
+      const groupCall = await getOrCreateGroupCall(groupCallTarget);
+      if(groupCall) {
+        if(!groupCall.pFlags.rtmp_stream && isRtmpStream && hasRights) {
+          await this.managers.appGroupCallsManager.hangUp(groupCall.id, true);
+          return next(null);
+        }
+        if(groupCall.pFlags.rtmp_stream) {
+          return liveStreamsController.joinGroupCall(chatId, groupCall);
+        }
+        return groupCallsController.joinGroupCall(chatId, groupCall, true, false);
+      }
     };
 
+    const groupCallId = await getGroupCallId();
     if(groupCallId) {
       const groupCall = await this.managers.appGroupCallsManager.getGroupCallFull(groupCallId);
       if(groupCall._ === 'groupCallDiscarded') {
@@ -1451,12 +1500,14 @@ export class AppImManager extends EventListenerBase<{
             langKey: 'VoiceChat.Chat.StartNew.OK'
           }
         });
+      } else {
+        return next(groupCall);
       }
     }
 
     // await this.discardCurrentCall(peerId);
 
-    next();
+    return next();
   };
 
   public setCurrentBackground(broadcastEvent = false, skipAnimation?: boolean): ReturnType<AppImManager['setBackground']> {

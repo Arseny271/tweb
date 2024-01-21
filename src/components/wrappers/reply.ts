@@ -28,6 +28,7 @@ export type WrapReplyOptions = WrapPinnedContainerOptions & {
   noBorder?: boolean,
   replyHeader?: MessageReplyHeader,
   quote?: {text: string, entities?: MessageEntity[]}
+  noHover?: boolean;
 } & WrapSomethingOptions;
 
 export default function wrapReply(options: WrapReplyOptions) {
@@ -47,6 +48,10 @@ export default function wrapReply(options: WrapReplyOptions) {
 
   if(options.noBorder) {
     replyContainer.container.classList.remove('quote-like-border');
+  }
+
+  if(options.noHover) {
+    replyContainer.container.classList.remove('quote-like-hoverable');
   }
 
   const {setColorPeerId} = options;

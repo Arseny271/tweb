@@ -30,7 +30,7 @@ const SectionContent: ParentComponent<JSX.HTMLAttributes<HTMLDivElement>> = (pro
     </div>
   );
 };
-const SectionCaption = (props: Pick<SectionOptions, 'caption' | 'captionArgs'>) => {
+export const SectionCaption = (props: Pick<SectionOptions, 'caption' | 'captionArgs'>) => {
   return (
     <SectionContent class={className + '-caption'}>
       {i18n(props.caption, props.captionArgs)}

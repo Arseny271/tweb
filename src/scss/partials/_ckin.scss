@@ -20,7 +20,7 @@
       background: #000;
       border-radius: 0 !important;
       display: flex;
-    
+
       video {
         width: 100%;
         height: 100%;
@@ -34,7 +34,7 @@
       margin-left: .875rem;
       font-size: .875rem;
       color: #fff;
-      
+
       @include respond-to(handhelds) {
         margin-left: 1.125rem;
       }
@@ -42,7 +42,7 @@
   }
 }
 
-.default {
+.default, .stream {
   position: relative;
   font-size: 0;
   display: flex;
@@ -75,7 +75,7 @@
       @include respond-to(not-handhelds) {
         pointer-events: none;
       }
-      
+
       @include animation-level(2) {
         transition: opacity var(--layer-transition);
       }
@@ -103,7 +103,7 @@
       margin: 0 16px;
       border-radius: var(--border-radius);
       background: rgba(255, 255, 255, .38);
-  
+
       &__filled {
         background: var(--primary-color);
       }
@@ -111,7 +111,7 @@
       &__loaded {
         background-color: #fff;
       }
-  
+
       @include respond-to(handhelds) {
         margin-bottom: -1px;
       }
@@ -135,7 +135,7 @@
       transition: transform var(--layer-transition);
     }
   }
-
+  &:not(.ckin__fullscreen) .stream__gradient-bottom,
   &:not(.ckin__fullscreen) .default__gradient-bottom {
     @include respond-to(handhelds) {
       display: none;
@@ -155,7 +155,9 @@
   }
 
   &.show-controls {
-    .default__gradient-bottom, 
+    .stream__gradient-bottom,
+    .stream__controls,
+    .default__gradient-bottom,
     .default__controls {
       transform: translateZ(0);
     }
@@ -170,6 +172,7 @@
   &.is-playing,
   &:not(.played),
   &.is-seeking {
+    .stream__button--big,
     .default__button--big {
       opacity: 0;
     }
@@ -206,7 +209,7 @@
     @include hover() {
       width: var(--show-width);
     }
-    
+
     &__icon {
       color: #fff;
       width: var(--icon-size);
@@ -231,12 +234,75 @@
       html.is-ios & {
         display: none;
       }
-    } 
+    }
   }
 
   &.is-buffering {
+    .stream__button--big,
     .default__button--big {
       display: none !important;
+    }
+  }
+}
+
+.stream__controls.ckin__controls > .progress-line {
+  display: none;
+}
+
+.stream__controls {
+  .time {
+    display: none;
+  }
+
+  .live-span-wrapper {
+    border-radius: 12px;
+    background: linear-gradient(75deg, #4588E3 -79.42%, #976FFF 20.35%, #E46ACE 100.03%), #EA3323;
+    display: inline-flex;
+    padding: 4px 8px;
+    justify-content: center;
+    align-items: center;
+    min-height: 24px;
+    gap: 12px;
+    color: #FFF;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-right: 0.35rem;
+  }
+
+  .stream-watchers-span {
+    color: #FFF;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    margin: 0 0.3rem;
+  }
+
+  .recording-span {
+    color: #bf382c;
+    display: inline-flex;
+    padding: 4px 8px;
+    padding-left: 16px;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 0 0.3rem;
+    position: relative;
+
+    &:before {
+      position: absolute;
+      display: block;
+      content: " ";
+      width: 8px;
+      height: 8px;
+      background-color: #bf382c;
+      border-radius: 50%;
+      left: 0;
+      top: 50%;
+      margin-top: -4px;
     }
   }
 }
@@ -315,7 +381,7 @@ video::-webkit-media-controls-enclosure {
     &::-moz-range-track,
     &::-webkit-slider-runnable-track {
       -webkit-appearance: none;
-      background: transparent; 
+      background: transparent;
       border-color: transparent;
       color: transparent;
       width: 0;
@@ -361,7 +427,7 @@ video::-webkit-media-controls-enclosure {
     background-color: var(--secondary-color);
   }
 
-  &__filled, 
+  &__filled,
   &__loaded {
     border-radius: var(--border-radius);
     position: absolute;

@@ -1,0 +1,8 @@
+enum LIVE_STREAM_STATE {
+  CONNECTED,
+  CONNECTING,
+  NO_STREAM,
+  CLOSED
+}
+
+export default LIVE_STREAM_STATE;

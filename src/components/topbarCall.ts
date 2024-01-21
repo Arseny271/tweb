@@ -29,6 +29,10 @@ import {AppManagers} from '../lib/appManagers/managers';
 import groupCallsController from '../lib/calls/groupCallsController';
 import StreamManager from '../lib/calls/streamManager';
 import callsController from '../lib/calls/callsController';
+import liveStreamsController from '../lib/streams/liveStreamsController';
+import LiveStreamInstance from '../lib/streams/liveStreamInstance';
+import LIVE_STREAM_STATE from '../lib/streams/liveStreamState';
+import AppStreamViewer from './appStreamViewer';
 
 function convertCallStateToGroupState(state: CALL_STATE, isMuted: boolean) {
   switch(state) {
@@ -37,6 +41,17 @@ function convertCallStateToGroupState(state: CALL_STATE, isMuted: boolean) {
       return GROUP_CALL_STATE.CLOSED;
     case CALL_STATE.CONNECTED:
       return isMuted ? GROUP_CALL_STATE.MUTED : GROUP_CALL_STATE.UNMUTED;
+    default:
+      return GROUP_CALL_STATE.CONNECTING;
+  }
+}
+
+function convertLiveStreamToGroupState(state:LIVE_STREAM_STATE) {
+  switch(state) {
+    case LIVE_STREAM_STATE.CLOSED:
+      return GROUP_CALL_STATE.CLOSED;
+    case LIVE_STREAM_STATE.CONNECTED:
+      return GROUP_CALL_STATE.UNMUTED;
     default:
       return GROUP_CALL_STATE.CONNECTING;
   }
@@ -77,6 +92,10 @@ export default class TopbarCall {
     });
 
     listenerSetter.add(groupCallsController)('instance', (instance) => {
+      this.updateInstance(instance);
+    });
+
+    listenerSetter.add(liveStreamsController)('instance', (instance) => {
       this.updateInstance(instance);
     });
 
@@ -125,6 +144,7 @@ export default class TopbarCall {
     }
 
     const isChangingInstance = this.instance !== instance;
+    const isGroupCallOrStream = instance instanceof GroupCallInstance || instance instanceof LiveStreamInstance;
     if(isChangingInstance) {
       this.clearCurrentInstance();
 
@@ -133,6 +153,10 @@ export default class TopbarCall {
 
       this.instanceListenerSetter.add(instance as GroupCallInstance)('state', this.onState);
 
+      if(instance instanceof LiveStreamInstance) {
+        this.instanceListenerSetter.add(instance)('pip', this.onState)
+      }
+
       if(instance instanceof GroupCallInstance) {
         this.currentDescription = this.groupCallDescription;
       } else {
@@ -140,17 +164,19 @@ export default class TopbarCall {
         this.instanceListenerSetter.add(instance)('muted', this.onState);
       }
 
-      this.container.classList.toggle('is-call', !(instance instanceof GroupCallInstance));
+      this.container.classList.toggle('is-call', !(isGroupCallOrStream));
     }
 
     const isMuted = this.instance.isMuted;
-    const state = instance instanceof GroupCallInstance ? instance.state : convertCallStateToGroupState(instance.connectionState, isMuted);
+    const state= instance instanceof GroupCallInstance ? instance.state:
+      (instance instanceof LiveStreamInstance ? convertLiveStreamToGroupState(instance.state): convertCallStateToGroupState(instance.connectionState, isMuted))
 
     const {weave} = this;
 
     weave.componentDidMount();
 
-    const isClosed = state === GROUP_CALL_STATE.CLOSED;
+    const needHide = false; // (this.instance instanceof LiveStreamInstance && !document.pictureInPictureElement)
+    const isClosed = state === GROUP_CALL_STATE.CLOSED || needHide;
     if((!document.body.classList.contains('is-calling') || isChangingInstance) || isClosed) {
       if(isClosed) {
         weave.setAmplitude(0);
@@ -163,8 +189,9 @@ export default class TopbarCall {
         duration: 250,
         onTransitionEnd: isClosed ? () => {
           weave.componentWillUnmount();
-
-          this.clearCurrentInstance();
+          if(!needHide) {
+            this.clearCurrentInstance();
+          }
         } : undefined
       });
     }
@@ -173,7 +200,7 @@ export default class TopbarCall {
       return;
     }
 
-    weave.setCurrentState(state, true);
+    weave.setCurrentState(state, true, instance instanceof LiveStreamInstance);
     // if(state === GROUP_CALL_STATE.CONNECTING) {
     //   weave.setCurrentState(state, true);
     // } else {
@@ -198,7 +225,7 @@ export default class TopbarCall {
   }
 
   private setTitle(instance: TopbarCall['instance']) {
-    if(instance instanceof GroupCallInstance) {
+    if(instance instanceof GroupCallInstance || instance instanceof LiveStreamInstance) {
       return this.groupCallTitle.update(instance);
     } else {
       replaceContent(this.center, new PeerTitle({peerId: instance.interlocutorUserId.toPeerId()}).element);
@@ -250,7 +277,9 @@ export default class TopbarCall {
         return;
       }
 
-      if(instance instanceof GroupCallInstance) {
+      if(instance instanceof LiveStreamInstance) {
+        instance.stopStream(false);
+      } else if(instance instanceof GroupCallInstance) {
         instance.hangUp();
       } else {
         instance.hangUp('phoneCallDiscardReasonHangup');
@@ -271,6 +300,8 @@ export default class TopbarCall {
         }
 
         PopupElement.createPopup(PopupCall, this.instance).show();
+      } else if(this.instance instanceof LiveStreamInstance) {
+        AppStreamViewer.openStream(this.instance);
       }
     }, {listenerSetter});
 

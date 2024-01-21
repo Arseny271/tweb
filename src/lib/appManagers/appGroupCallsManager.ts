@@ -242,12 +242,12 @@ export class AppGroupCallsManager extends AppManager {
     return call;
   }
 
-  public async createGroupCall(chatId: ChatId, scheduleDate?: number, title?: string) {
+  public async createGroupCall(chatId: ChatId, scheduleDate?: number, title?: string, isRtmpStream?: boolean) {
     const updates = await this.apiManager.invokeApi('phone.createGroupCall', {
       peer: this.appPeersManager.getInputPeerById(chatId.toPeerId(true)),
       random_id: nextRandomUint(32),
       schedule_date: scheduleDate,
-      title
+      title, rtmp_stream: isRtmpStream
     });
 
     this.apiUpdatesManager.processUpdateMessage(updates);
@@ -380,5 +380,31 @@ export class AppGroupCallsManager extends AppManager {
     }).then((updates) => {
       this.apiUpdatesManager.processUpdateMessage(updates);
     });
+  }
+
+  public async getGroupCallStreamRtmpUrl(chatId: ChatId, revoke?: boolean) {
+    return this.apiManager.invokeApi('phone.getGroupCallStreamRtmpUrl', {
+      peer: this.appPeersManager.getInputPeerById(chatId.toPeerId(true)),
+      revoke
+    });
+  }
+
+  public async getLivestreamChannels(id: GroupCallId) {
+    return this.apiManager.invokeApi('phone.getGroupCallStreamChannels', {
+      call: this.getGroupCallInput(id)
+    });
+  }
+
+  public startGroupCallRecording(groupCallId: GroupCallId, title?: string, video?: boolean, portrait?: boolean) {
+    return this.apiManager.invokeApi('phone.toggleGroupCallRecord', {
+      title, video, video_portrait: portrait, start: true,
+      call: this.getGroupCallInput(groupCallId)
+    })
+  }
+
+  public stopGroupCallRecording(groupCallId: GroupCallId) {
+    return this.apiManager.invokeApi('phone.toggleGroupCallRecord', {
+      call: this.getGroupCallInput(groupCallId), start: false
+    })
   }
 }

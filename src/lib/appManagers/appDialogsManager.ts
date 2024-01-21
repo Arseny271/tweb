@@ -111,6 +111,7 @@ import setBadgeContent from '../../helpers/setBadgeContent';
 import createBadge from '../../helpers/createBadge';
 import {isDialog, isForumTopic, isSavedDialog} from './utils/dialogs/isDialog';
 import {ChatType} from '../../components/chat/chat';
+import liveStreamsController from '../streams/liveStreamsController';
 
 export const DIALOG_LIST_ELEMENT_TAG = 'A';
 
@@ -1991,6 +1992,7 @@ export class AppDialogsManager {
     appSidebarLeft.construct(managers);
     appSidebarRight.construct(managers);
     groupCallsController.construct(managers);
+    liveStreamsController.construct(managers);
     callsController.construct(managers);
     appImManager.construct(managers);
     new ConnectionStatusComponent().construct(managers, this.chatsContainer, appSidebarLeft.inputSearch);
