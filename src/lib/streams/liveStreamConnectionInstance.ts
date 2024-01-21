@@ -125,7 +125,7 @@ export default class LiveStreamConnectionInstance {
     if(timeout <= 0) {
       return;
     }
-    return new Promise<void>(r => setTimeout(r, 1000));
+    return new Promise<void>(r => setTimeout(r, timeout));
   }
 
   /* * */
